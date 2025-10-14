@@ -8,17 +8,19 @@ int module = 1;
 
 // 软件计时器（约65毫秒后重置）int:16位
 int timer_count = 0;
-bool is_later(int t1, int t2)
-{
-	// 时间刻 t1 是否在 t2 之后，不考虑溢出，则只能在一分钟内保持有效
-	return t1>t2;
-}
+//int is_later(int t1, int t2)
+//{
+//	// 时间刻 t1 是否在 t2 之后；不考虑溢出，则只能在一分钟内保持有效
+//	return t1>t2;
+//}
 
 
 // 流水跑马时间间隔 50~450
 int wait_time_interval = 50;
 // 流水灯状态
 char water_light_status = 0x0f;
+// 流水跑马灯上次运行的时刻
+int last_light_time = 0;
 
 // 流水灯
 void module1()
@@ -39,18 +41,18 @@ char horse_light_status = 0x01;
 // 跑马灯(按第一个键调整时间间隔)
 void module2()
 {
-	int i = 0;
-	while (i<3) {
-		i++;
-		delay(wait_time_interval/3);
-		// 调整时间
-		if (IsKeyDown(3)) {
-			wait_time_interval += 100;
-			if (wait_time_interval > 450) {
-				wait_time_interval = 50;
-			}
+	// 调整时间间隔(按键事件不应阻塞)
+	if (IsKeyDown(1)) {
+		wait_time_interval += 100;
+		if (wait_time_interval > 450) {
+			wait_time_interval = 50;
 		}
 	}
+	// 时间是否过了一个间隔，是否应该“跑马”一次
+	if (timer_count - last_light_time < wait_time_interval)
+		return;
+	last_light_time = timer_count;
+	// 主要逻辑
 	horse_light_status <<= 1;
 	if (horse_light_status == 0) {
 		horse_light_status = 1;
@@ -83,6 +85,7 @@ void main()
 {
 	while (1) {
 		// 计时器计数加一
+		delay(1);
 		timer_count++;
 		// 模块切换
 		if (IsKeyDown(2)) {
