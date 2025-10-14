@@ -18,7 +18,7 @@ int timer_count = 0;
 // 流水跑马时间间隔 50~450
 int wait_time_interval = 50;
 // 流水灯状态
-char water_light_status = 0x0f;
+unsigned char water_light_status = 0x0f;
 // 流水跑马灯上次运行的时刻
 int last_light_time = 0;
 
@@ -26,12 +26,25 @@ int last_light_time = 0;
 void module1()
 {
 	// 调整时间
-//	if (IsKeyDown(1)) {
-//		wait_time_interval += 100;
-//		if (wait_time_interval > 450) {
-//			wait_time_interval = 50;
-//		}
-//	}
+	if (IsKeyDown(1)) {
+		wait_time_interval += 100;
+		if (wait_time_interval > 450) {
+			wait_time_interval = 50;
+		}
+	}
+	// 时间是否过了一个间隔，是否应该“流水”一格
+	if (timer_count - last_light_time < wait_time_interval)
+		return;
+	last_light_time = timer_count;
+	// 主要逻辑
+	if (water_light_status & 0x80) {
+		// 1000 0000
+		water_light_status <<= 1;
+		water_light_status += 1;
+	} else {
+		water_light_status <<= 1;
+	}
+	P2 = ~water_light_status;
 }
 
 
