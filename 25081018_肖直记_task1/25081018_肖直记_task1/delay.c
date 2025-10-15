@@ -27,11 +27,25 @@ static void Delay996us(void)	//@11.0592MHz
 	} while (--i);
 }
 
+static void Delay6us(void)	//@11.0592MHz
+{
+	_nop_();
+}
+
 void delay(int ms)
 {
 	int i;
 	// 判断和自增运算也会消耗时间
 	for (i=0; i<ms; i++) {
 		Delay996us();
+	}
+}
+
+void delay_us(int us)
+{
+	int i;
+	// 判断和自增运算也会消耗时间
+	for (i=0; i<us; i++) {
+		Delay6us();
 	}
 }
