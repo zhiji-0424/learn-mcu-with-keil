@@ -45,7 +45,7 @@ void delay_us(int us)
 {
 	int i;
 	// 判断和自增运算也会消耗时间
-	for (i=0; i<us; i++) {
+	for (i=0; i<us; i+=10) {
 		Delay6us();
 	}
 }

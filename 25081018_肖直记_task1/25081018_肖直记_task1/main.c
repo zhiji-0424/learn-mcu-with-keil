@@ -1,4 +1,6 @@
 #include <REGX52.H>
+#include <INTRINS.H>
+#include <math.h>
 #include <key.h>
 #include <delay.h>
 
@@ -84,8 +86,11 @@ int breathing_velocity = 1;
 unsigned int last_fresh_time = 0;
 // 上一次呼吸灯亮度变化时间刻
 unsigned int last_animate_time = 0;
+// 0-线性 or 1-非线性
+char breath_light_mode = 0;
 
-// 线性呼吸灯(按第一个键调整呼吸（亮-灭-亮）时间间隔)
+
+// 呼吸灯(按第一个键调整呼吸（亮-灭-亮）时间间隔)
 void module3()
 {
 	// 调整呼吸时间间隔
@@ -97,16 +102,30 @@ void module3()
 			wait_time_interval = 500;
 		}
 	}
+	// 切换呼吸灯模式
+	if (IsKeyDown(3)) {
+		breath_light_mode = ~breath_light_mode;
+	}
 	// wait_time_interval 作为呼吸（亮-灭-亮）时间间隔，单位ms
 	// 使亮度变化
-	if (timer_count - last_animate_time > wait_time_interval/fresh_interval/2) {
-		last_animate_time = timer_count;
-		if (breathing_light>=fresh_interval)
-			breathing_velocity = -1;
-		if (breathing_light<=0)
-			breathing_velocity = 1;
-		breathing_light += breathing_velocity;
+	if (breath_light_mode == 0) {
+		// 线性变化
+		if (timer_count - last_animate_time > wait_time_interval/fresh_interval/2) {
+			last_animate_time = timer_count;
+			if (breathing_light>=fresh_interval)
+				breathing_velocity = -1;
+			if (breathing_light<=0)
+				breathing_velocity = 1;
+			breathing_light += breathing_velocity;
+		}
+	} else {
+		// 固定60fps更新亮度，且为sin计算预留时间，但是正弦还是太耗时
+		if (timer_count - last_animate_time > 14) {
+			last_animate_time = timer_count;
+			breathing_light = fresh_interval*0.5*(sin(3.14159*(timer_count*2.0/wait_time_interval-0.5))+1);
+		}
 	}
+//	P2 = ~breathing_light;
 	// 使灯刷新
 	if (timer_count - last_fresh_time > fresh_interval-breathing_light) {
 		// 保持灭一定时间，时间长度为 fresh_interval-breathing_light，再亮灯
@@ -133,12 +152,21 @@ void module4()
 	}
 }
 
+void Delay500us(void)	//@11.0592MHz
+{
+	unsigned char data i;
+
+	_nop_();
+	i = 227;
+	while (--i);
+}
 
 void main()
 {
 	while (1) {
 		// 计时器计数加一
-		delay(1);
+//		delay(1);
+		Delay500us();
 		timer_count++;
 		// 模块切换
 		if (IsKeyDown(2)) {
@@ -157,6 +185,7 @@ void main()
 			breathing_velocity = 1;		// 呼吸灯亮度变化速度（用于加亮度或减亮度）
 			last_fresh_time = 0;		// 上一次呼吸灯刷新时间刻
 			last_animate_time = 0;		// 上一次呼吸灯亮度变化时间刻
+			breath_light_mode = 0;		// 切换呼吸灯模式
 			bin_value = 0;				// 二进制要显示的值
 			P2 = 0xff;					// 灭灯
 		}
