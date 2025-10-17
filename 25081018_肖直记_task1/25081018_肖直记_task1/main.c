@@ -96,6 +96,12 @@ unsigned int last_animate_time = 0;
 // 0-线性 or 1-非线性
 char breath_light_mode = 0;
 
+int light_value[] = {
+    0, 0, 1, 1, 2, 3, 5, 6, 8, 9, 
+    11, 12, 13, 15, 16, 16, 17, 17, 17, 17, 
+    16, 15, 14, 13, 11, 10, 8, 7, 5, 4, 
+    3, 2, 1, 0, 0
+};
 
 // 呼吸灯(按第一个键调整呼吸（亮-灭-亮）时间间隔)
 void module3()
@@ -130,7 +136,9 @@ void module3()
 			// 固定60fps更新亮度，且为sin计算预留时间，但是正弦还是太耗时
 			if (timer_count - last_animate_time > 14) {
 				last_animate_time = timer_count;
-				breathing_light = fresh_interval*0.5*(sin(3.14159*(timer_count*2.0/wait_time_interval-0.5))+1);
+//				breathing_light = fresh_interval*0.5*(sin(3.14159*(timer_count*2.0/wait_time_interval-0.5))+1);
+				// 使用预先计算的数值，可以减少卡顿
+				breathing_light = light_value[(timer_count%2000)/58];
 			}
 		}
 	}
