@@ -1,24 +1,38 @@
-sfr p2 = 0xa0;
+#include <REGX52.H>
+#include <INTRINS.H>
 
-void sleep()
+sbit led1 = P2^0;
+
+void Delay1000us(void)	//@11.0592MHz
 {
-	int a = 10000;
-	while (a) {
-		a--;
+	unsigned char data i, j;
+
+	_nop_();
+	i = 2;
+	j = 199;
+	do
+	{
+		while (--j);
+	} while (--i);
+}
+
+void delay(int ms)
+{
+	while (ms--)
+	{
+		Delay1000us();
 	}
 }
 
-// 1110 1101
 
 void main()
 {
-	p2 = 0xfe;// 1111 1110
-	while (1) {
-		p2 <<= 1;
-		p2 += 1;
-		if (p2 == 0xff) {
-			p2 -= 1;
-		}
-		sleep();
+	while (1)
+	{
+		// led闪烁
+		led1 = 0;
+		delay(500);
+		led1 = 1;
+		delay(500);
 	}
 }
